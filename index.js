@@ -24,10 +24,10 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ---- TOKEN DEL BOT (INSERISCI IL TUO QUI) ----
-const BOT_TOKEN = process.env.BOT_TOKEN || "INSERT_YOUR_TOKEN_HERE";
-if (BOT_TOKEN === "INSERT_YOUR_TOKEN_HERE") {
-  console.error("ERRORE: Inserisci il token del bot in BOT_TOKEN");
+// ---- TOKEN DEL BOT (usa variabile ambiente) ----
+const BOT_TOKEN = process.env.BOT_TOKEN;
+if (!BOT_TOKEN) {
+  console.error("ERRORE: Imposta la variabile ambiente BOT_TOKEN");
   process.exit(1);
 }
 

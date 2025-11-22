@@ -29,3 +29,12 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 44145
+externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+BOT_TOKEN = "8530856333:AAFcESs0s9YuId3ageUhNij206b0L4mZ0tg"
