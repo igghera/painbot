@@ -183,7 +183,18 @@ app.get("/", (req, res) => {
 app.listen(5000, "0.0.0.0", () => console.log("Keep-alive attivo su porta 5000"));
 
 // ---- Avvio bot ----
-bot.launch().then(() => console.log("Bot avviato")).catch(console.error);
+(async () => {
+  try {
+    console.log("Connessione al bot in corso...");
+    await bot.launch();
+    console.log("✅ Bot avviato e connesso a Telegram!");
+    console.log("📱 Bot username: @PainPalsBot");
+    console.log("🎮 Il bot è pronto per ricevere comandi!");
+  } catch (err) {
+    console.error("❌ Errore connessione bot:", err);
+    process.exit(1);
+  }
+})();
 
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
