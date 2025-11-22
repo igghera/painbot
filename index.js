@@ -77,7 +77,7 @@ bot.command("help", (ctx) => {
       `/classifica → mostra classifica\n` +
       `/miei → mostra i tuoi punti\n` +
       `/vittorie → storico vittorie\n` +
-      `/register → registra questa chat per i messaggi giornalieri`
+      `/register → registra questa chat per i messaggi giornalieri`,
   );
 });
 
@@ -108,7 +108,8 @@ bot.on("text", (ctx) => {
 });
 
 bot.command("classifica", (ctx) => {
-  if (Object.keys(points).length === 0) return ctx.reply("Nessun punto ancora.");
+  if (Object.keys(points).length === 0)
+    return ctx.reply("Nessun punto ancora.");
 
   const msg = Object.entries(points)
     .sort((a, b) => b[1] - a[1])
@@ -129,9 +130,7 @@ bot.command("miei", (ctx) => {
 bot.command("vittorie", (ctx) => {
   if (victories.length === 0) return ctx.reply("Nessuna vittoria registrata.");
 
-  const msg = victories
-    .map((v) => `• ${v.giocatore} — ${v.data}`)
-    .join("\n");
+  const msg = victories.map((v) => `• ${v.giocatore} — ${v.data}`).join("\n");
 
   ctx.reply("🏆 Storico vittorie:\n" + msg);
 });
@@ -180,7 +179,9 @@ const app = express();
 app.get("/", (req, res) => {
   res.send("Bot attivo");
 });
-app.listen(5000, "0.0.0.0", () => console.log("Keep-alive attivo su porta 5000"));
+app.listen(5000, "0.0.0.0", () =>
+  console.log("Keep-alive attivo su porta 5000"),
+);
 
 // ---- Avvio bot ----
 (async () => {
