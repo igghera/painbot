@@ -63,8 +63,19 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// ---- Debug middleware ----
+bot.use((ctx, next) => {
+  console.log(`📨 Update ricevuto: ${ctx.updateType}`);
+  if (ctx.message) {
+    console.log(`  Messaggio: "${ctx.message.text}"`);
+    console.log(`  Da: ${ctx.from.username || ctx.from.first_name}`);
+  }
+  return next();
+});
+
 // ---- Comandi Telegram ----
 bot.command("register", (ctx) => {
+  console.log("Comando /register ricevuto");
   config.chatId = ctx.chat.id;
   save();
   ctx.reply("✅ Questa chat è stata registrata per il messaggio giornaliero.");
@@ -187,13 +198,30 @@ app.listen(5000, "0.0.0.0", () =>
 (async () => {
   try {
     console.log("Connessione al bot in corso...");
-    await bot.launch();
+    console.log("Testing bot connection...");
+    
+    // Test bot connection first
+    const me = await bot.telegram.getMe();
+    console.log(`Bot info: ${me.first_name} (@${me.username})`);
+    
+    // Launch bot (don't await - let it run in background)
+    bot.launch({
+      dropPendingUpdates: true
+    }).then(() => {
+      console.log("✅ Bot polling avviato!");
+    }).catch(err => {
+      console.error("Errore launch:", err);
+    });
+    
+    // Give it a moment to start
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     console.log("✅ Bot avviato e connesso a Telegram!");
     console.log("📱 Bot username: @PainPalsBot");
     console.log("🎮 Il bot è pronto per ricevere comandi!");
   } catch (err) {
     console.error("❌ Errore connessione bot:", err);
-    process.exit(1);
+    console.error("Stack:", err.stack);
   }
 })();
 
