@@ -15,7 +15,7 @@ IMPORTANTE: inserisci il tuo TOKEN nella variabile BOT_TOKEN
 NON condividere il tuo token con nessuno.
 */
 
-import { Telegraf } from "telegraf";
+import { Telegraf, Markup } from "telegraf";
 import express from "express";
 import fs from "fs";
 import path from "path";
@@ -63,6 +63,13 @@ function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
+// ---- Keyboard con pulsanti ----
+const mainKeyboard = Markup.keyboard([
+  ['🏅 +1', '📊 Classifica'],
+  ['📥 I miei punti', '🏆 Vittorie'],
+  ['❓ Help']
+]).resize();
+
 // ---- Debug middleware ----
 bot.use((ctx, next) => {
   console.log(`📨 Update ricevuto: ${ctx.updateType}`);
@@ -74,35 +81,44 @@ bot.use((ctx, next) => {
 });
 
 // ---- Comandi Telegram ----
+bot.command("start", (ctx) => {
+  ctx.reply(
+    `👋 Benvenuto nel bot Pain Pals!\n\n` +
+    `Usa i pulsanti qui sotto per interagire con il bot.`,
+    mainKeyboard
+  );
+});
+
 bot.command("register", (ctx) => {
   console.log("Comando /register ricevuto");
   config.chatId = ctx.chat.id;
   save();
-  ctx.reply("✅ Questa chat è stata registrata per il messaggio giornaliero.");
+  ctx.reply("✅ Questa chat è stata registrata per il messaggio giornaliero.", mainKeyboard);
 });
 
 bot.command("help", (ctx) => {
   ctx.reply(
     `Comandi disponibili:\n\n` +
-      `+1 → prendi 1 punto (max 1 al giorno)\n` +
-      `/classifica → mostra classifica\n` +
-      `/miei → mostra i tuoi punti\n` +
-      `/vittorie → storico vittorie\n` +
+      `🏅 +1 → prendi 1 punto (max 1 al giorno)\n` +
+      `📊 Classifica → mostra classifica\n` +
+      `📥 I miei punti → mostra i tuoi punti\n` +
+      `🏆 Vittorie → storico vittorie\n` +
       `/register → registra questa chat per i messaggi giornalieri`,
+    mainKeyboard
   );
 });
 
 bot.command("classifica", (ctx) => {
   console.log("Comando /classifica ricevuto");
   if (Object.keys(points).length === 0)
-    return ctx.reply("Nessun punto ancora.");
+    return ctx.reply("Nessun punto ancora.", mainKeyboard);
 
   const msg = Object.entries(points)
     .sort((a, b) => b[1] - a[1])
     .map(([u, p], i) => `${i + 1}. ${u}: ${p}`)
     .join("\n");
 
-  ctx.reply("📊 Classifica:\n" + msg);
+  ctx.reply("📊 Classifica:\n" + msg, mainKeyboard);
 });
 
 bot.command("miei", (ctx) => {
@@ -111,16 +127,16 @@ bot.command("miei", (ctx) => {
     ? "@" + ctx.from.username
     : ctx.from.first_name || "user" + ctx.from.id;
 
-  ctx.reply(`📥 ${user}, hai ${points[user] || 0} punti.`);
+  ctx.reply(`📥 ${user}, hai ${points[user] || 0} punti.`, mainKeyboard);
 });
 
 bot.command("vittorie", (ctx) => {
   console.log("Comando /vittorie ricevuto");
-  if (victories.length === 0) return ctx.reply("Nessuna vittoria registrata.");
+  if (victories.length === 0) return ctx.reply("Nessuna vittoria registrata.", mainKeyboard);
 
   const msg = victories.map((v) => `• ${v.giocatore} — ${v.data}`).join("\n");
 
-  ctx.reply("🏆 Storico vittorie:\n" + msg);
+  ctx.reply("🏆 Storico vittorie:\n" + msg, mainKeyboard);
 });
 
 // ---- Handler per testo (deve essere DOPO i comandi) ----
@@ -135,18 +151,55 @@ bot.on("text", (ctx) => {
     save();
   }
 
-  if (text.includes("+1")) {
+  // Handle button presses
+  if (text === "🏅 +1" || text.includes("+1")) {
     const todayStr = today();
 
     if (lastPointDate[user] === todayStr) {
-      return ctx.reply(`❌ ${user}, hai già preso un punto oggi.`);
+      return ctx.reply(`❌ ${user}, hai già preso un punto oggi.`, mainKeyboard);
     }
 
     points[user] = (points[user] || 0) + 1;
     lastPointDate[user] = todayStr;
     save();
 
-    ctx.reply(`🏅 Punto assegnato a ${user}! Totale: ${points[user]}`);
+    return ctx.reply(`🏅 Punto assegnato a ${user}! Totale: ${points[user]}`, mainKeyboard);
+  }
+
+  if (text === "📊 Classifica") {
+    if (Object.keys(points).length === 0)
+      return ctx.reply("Nessun punto ancora.", mainKeyboard);
+
+    const msg = Object.entries(points)
+      .sort((a, b) => b[1] - a[1])
+      .map(([u, p], i) => `${i + 1}. ${u}: ${p}`)
+      .join("\n");
+
+    return ctx.reply("📊 Classifica:\n" + msg, mainKeyboard);
+  }
+
+  if (text === "📥 I miei punti") {
+    return ctx.reply(`📥 ${user}, hai ${points[user] || 0} punti.`, mainKeyboard);
+  }
+
+  if (text === "🏆 Vittorie") {
+    if (victories.length === 0) 
+      return ctx.reply("Nessuna vittoria registrata.", mainKeyboard);
+
+    const msg = victories.map((v) => `• ${v.giocatore} — ${v.data}`).join("\n");
+    return ctx.reply("🏆 Storico vittorie:\n" + msg, mainKeyboard);
+  }
+
+  if (text === "❓ Help") {
+    return ctx.reply(
+      `Comandi disponibili:\n\n` +
+        `🏅 +1 → prendi 1 punto (max 1 al giorno)\n` +
+        `📊 Classifica → mostra classifica\n` +
+        `📥 I miei punti → mostra i tuoi punti\n` +
+        `🏆 Vittorie → storico vittorie\n` +
+        `/register → registra questa chat per i messaggi giornalieri`,
+      mainKeyboard
+    );
   }
 });
 
