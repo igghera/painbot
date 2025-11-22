@@ -92,6 +92,38 @@ bot.command("help", (ctx) => {
   );
 });
 
+bot.command("classifica", (ctx) => {
+  console.log("Comando /classifica ricevuto");
+  if (Object.keys(points).length === 0)
+    return ctx.reply("Nessun punto ancora.");
+
+  const msg = Object.entries(points)
+    .sort((a, b) => b[1] - a[1])
+    .map(([u, p], i) => `${i + 1}. ${u}: ${p}`)
+    .join("\n");
+
+  ctx.reply("📊 Classifica:\n" + msg);
+});
+
+bot.command("miei", (ctx) => {
+  console.log("Comando /miei ricevuto");
+  const user = ctx.from.username
+    ? "@" + ctx.from.username
+    : ctx.from.first_name || "user" + ctx.from.id;
+
+  ctx.reply(`📥 ${user}, hai ${points[user] || 0} punti.`);
+});
+
+bot.command("vittorie", (ctx) => {
+  console.log("Comando /vittorie ricevuto");
+  if (victories.length === 0) return ctx.reply("Nessuna vittoria registrata.");
+
+  const msg = victories.map((v) => `• ${v.giocatore} — ${v.data}`).join("\n");
+
+  ctx.reply("🏆 Storico vittorie:\n" + msg);
+});
+
+// ---- Handler per testo (deve essere DOPO i comandi) ----
 bot.on("text", (ctx) => {
   const text = ctx.message.text;
   const user = ctx.from.username
@@ -116,34 +148,6 @@ bot.on("text", (ctx) => {
 
     ctx.reply(`🏅 Punto assegnato a ${user}! Totale: ${points[user]}`);
   }
-});
-
-bot.command("classifica", (ctx) => {
-  if (Object.keys(points).length === 0)
-    return ctx.reply("Nessun punto ancora.");
-
-  const msg = Object.entries(points)
-    .sort((a, b) => b[1] - a[1])
-    .map(([u, p], i) => `${i + 1}. ${u}: ${p}`)
-    .join("\n");
-
-  ctx.reply("📊 Classifica:\n" + msg);
-});
-
-bot.command("miei", (ctx) => {
-  const user = ctx.from.username
-    ? "@" + ctx.from.username
-    : ctx.from.first_name || "user" + ctx.from.id;
-
-  ctx.reply(`📥 ${user}, hai ${points[user] || 0} punti.`);
-});
-
-bot.command("vittorie", (ctx) => {
-  if (victories.length === 0) return ctx.reply("Nessuna vittoria registrata.");
-
-  const msg = victories.map((v) => `• ${v.giocatore} — ${v.data}`).join("\n");
-
-  ctx.reply("🏆 Storico vittorie:\n" + msg);
 });
 
 // ---- Controllo giornaliero mezzanotte ----
