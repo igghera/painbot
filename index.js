@@ -50,6 +50,9 @@ function loadJSON(file, def) {
 let points = loadJSON(POINTS_FILE, {});
 let lastPointDate = loadJSON(LAST_POINT_FILE, {});
 let victories = loadJSON(VICTORIES_FILE, []);
+if (!Array.isArray(victories)) {
+  victories = [];
+}
 let config = loadJSON(CONFIG_FILE, {});
 
 function save() {
@@ -65,9 +68,9 @@ function today() {
 
 // ---- Keyboard con pulsanti ----
 const mainKeyboard = Markup.keyboard([
-  ['🏅 +1', '📊 Classifica'],
-  ['📥 I miei punti', '🏆 Vittorie'],
-  ['❓ Help']
+  ["🏅 +1", "📊 Classifica"],
+  ["📥 I miei punti", "🏆 Vittorie"],
+  ["❓ Help"],
 ]).resize();
 
 // ---- Debug middleware ----
@@ -83,8 +86,7 @@ bot.use((ctx, next) => {
 // ---- Comandi Telegram ----
 bot.command("start", (ctx) => {
   ctx.reply(
-    `👋 Benvenuto nel bot Pain Pals!\n\n` +
-    `Usa i pulsanti qui sotto per interagire con il bot.`,
+    `👋 Benvenuto nel bot Pain Pals!\n\n` + `Usa i pulsanti qui sotto per interagire con il bot.`,
     mainKeyboard
   );
 });
@@ -110,8 +112,7 @@ bot.command("help", (ctx) => {
 
 bot.command("classifica", (ctx) => {
   console.log("Comando /classifica ricevuto");
-  if (Object.keys(points).length === 0)
-    return ctx.reply("Nessun punto ancora.", mainKeyboard);
+  if (Object.keys(points).length === 0) return ctx.reply("Nessun punto ancora.", mainKeyboard);
 
   const msg = Object.entries(points)
     .sort((a, b) => b[1] - a[1])
@@ -123,9 +124,7 @@ bot.command("classifica", (ctx) => {
 
 bot.command("miei", (ctx) => {
   console.log("Comando /miei ricevuto");
-  const user = ctx.from.username
-    ? "@" + ctx.from.username
-    : ctx.from.first_name || "user" + ctx.from.id;
+  const user = ctx.from.username ? "@" + ctx.from.username : ctx.from.first_name || "user" + ctx.from.id;
 
   ctx.reply(`📥 ${user}, hai ${points[user] || 0} punti.`, mainKeyboard);
 });
@@ -142,9 +141,7 @@ bot.command("vittorie", (ctx) => {
 // ---- Handler per testo (deve essere DOPO i comandi) ----
 bot.on("text", (ctx) => {
   const text = ctx.message.text;
-  const user = ctx.from.username
-    ? "@" + ctx.from.username
-    : ctx.from.first_name || "user" + ctx.from.id;
+  const user = ctx.from.username ? "@" + ctx.from.username : ctx.from.first_name || "user" + ctx.from.id;
 
   if (!config.chatId) {
     config.chatId = ctx.chat.id;
@@ -167,8 +164,7 @@ bot.on("text", (ctx) => {
   }
 
   if (text === "📊 Classifica") {
-    if (Object.keys(points).length === 0)
-      return ctx.reply("Nessun punto ancora.", mainKeyboard);
+    if (Object.keys(points).length === 0) return ctx.reply("Nessun punto ancora.", mainKeyboard);
 
     const msg = Object.entries(points)
       .sort((a, b) => b[1] - a[1])
@@ -183,8 +179,7 @@ bot.on("text", (ctx) => {
   }
 
   if (text === "🏆 Vittorie") {
-    if (victories.length === 0) 
-      return ctx.reply("Nessuna vittoria registrata.", mainKeyboard);
+    if (victories.length === 0) return ctx.reply("Nessuna vittoria registrata.", mainKeyboard);
 
     const msg = victories.map((v) => `• ${v.giocatore} — ${v.data}`).join("\n");
     return ctx.reply("🏆 Storico vittorie:\n" + msg, mainKeyboard);
@@ -247,32 +242,33 @@ const app = express();
 app.get("/", (req, res) => {
   res.send("Bot attivo");
 });
-app.listen(5000, "0.0.0.0", () =>
-  console.log("Keep-alive attivo su porta 5000"),
-);
+app.listen(5000, "0.0.0.0", () => console.log("Keep-alive attivo su porta 5000"));
 
 // ---- Avvio bot ----
 (async () => {
   try {
     console.log("Connessione al bot in corso...");
     console.log("Testing bot connection...");
-    
+
     // Test bot connection first
     const me = await bot.telegram.getMe();
     console.log(`Bot info: ${me.first_name} (@${me.username})`);
-    
+
     // Launch bot (don't await - let it run in background)
-    bot.launch({
-      dropPendingUpdates: true
-    }).then(() => {
-      console.log("✅ Bot polling avviato!");
-    }).catch(err => {
-      console.error("Errore launch:", err);
-    });
-    
+    bot
+      .launch({
+        dropPendingUpdates: true,
+      })
+      .then(() => {
+        console.log("✅ Bot polling avviato!");
+      })
+      .catch((err) => {
+        console.error("Errore launch:", err);
+      });
+
     // Give it a moment to start
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     console.log("✅ Bot avviato e connesso a Telegram!");
     console.log("📱 Bot username: @PainPalsBot");
     console.log("🎮 Il bot è pronto per ricevere comandi!");
